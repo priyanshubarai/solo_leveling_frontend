@@ -14,14 +14,14 @@ import {
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Quests", icon: Target, path: "/dashboard" },
-  { label: "Daily Quests", icon: CalendarCheck, path: "/dashboard" },
-  { label: "Goals", icon: Flag, path: "/dashboard" },
-  { label: "Community", icon: Users, path: "/dashboard" },
-  { label: "Leaderboard", icon: Trophy, path: "/dashboard" },
-  { label: "Achievements", icon: Award, path: "/dashboard" },
-  { label: "Analytics", icon: BarChart3, path: "/dashboard" },
-  { label: "Settings", icon: Settings, path: "/dashboard" },
+  { label: "Quests", icon: Target, path: "/quests" },
+  { label: "Daily Quests", icon: CalendarCheck, path: "/daily-quests" },
+  { label: "Goals", icon: Flag, path: "/goals" },
+  { label: "Community", icon: Users, path: "/community" },
+  { label: "Leaderboard", icon: Trophy, path: "/leaderboard" },
+  { label: "Achievements", icon: Award, path: "/achievements" },
+  { label: "Analytics", icon: BarChart3, path: "/analytics" },
+  { label: "Settings", icon: Settings, path: "/settings" },
 ];
 
 const DashboardNavbar = () => {
@@ -48,7 +48,7 @@ const DashboardNavbar = () => {
         {/* Nav links */}
         <div className="hidden lg:flex items-center gap-1 overflow-x-auto">
           {navItems.map((item) => {
-            const isActive = item.label === "Dashboard";
+            const isActive = location.pathname === item.path;
             return (
               <button
                 key={item.label}
