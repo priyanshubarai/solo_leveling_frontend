@@ -1,10 +1,13 @@
 import { useState } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
-import { Plus, Sparkles, Check, ChevronDown, Swords } from "lucide-react";
+import { Plus, Sparkles, Check, ChevronDown, Swords, Zap, Brain, Dumbbell, Heart, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Quest {
@@ -26,9 +29,17 @@ const initialQuests: Quest[] = [
 ];
 
 const difficultyConfig = {
-  easy: { label: "easy", className: "bg-accent/20 text-accent border-accent/30" },
-  medium: { label: "medium", className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-  hard: { label: "hard", className: "bg-destructive/20 text-destructive border-destructive/30" },
+  easy: { label: "easy", className: "bg-accent/20 text-accent border-accent/30", xp: 25 },
+  medium: { label: "medium", className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", xp: 50 },
+  hard: { label: "hard", className: "bg-destructive/20 text-destructive border-destructive/30", xp: 100 },
+};
+
+const categoryConfig = {
+  productivity: { label: "Productivity", icon: Zap, statBoost: "AGI" },
+  learning: { label: "Learning", icon: Brain, statBoost: "INT" },
+  fitness: { label: "Fitness", icon: Dumbbell, statBoost: "STR" },
+  health: { label: "Health", icon: Heart, statBoost: "VIT" },
+  social: { label: "Social", icon: Users, statBoost: "SEN" },
 };
 
 const preferenceMap = {
@@ -44,7 +55,11 @@ const Quests = () => {
   const [matchPreference, setMatchPreference] = useState(false);
   const [preference] = useState<"easy" | "medium" | "hard">("medium");
   const [proTipOpen, setProTipOpen] = useState(false);
-
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newCategory, setNewCategory] = useState<keyof typeof categoryConfig>("productivity");
+  const [newDifficulty, setNewDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const activeQuests = quests.filter((q) => !q.completed);
   const completedQuests = quests.filter((q) => q.completed);
 
@@ -56,6 +71,28 @@ const Quests = () => {
 
   const handleComplete = (id: string) => {
     setQuests((prev) => prev.map((q) => (q.id === id ? { ...q, completed: true } : q)));
+  };
+
+  const handleCreateQuest = () => {
+    if (!newTitle.trim()) return;
+    const cat = categoryConfig[newCategory];
+    const diff = difficultyConfig[newDifficulty];
+    const statVal = newDifficulty === "easy" ? 1 : newDifficulty === "medium" ? 2 : 3;
+    const newQuest: Quest = {
+      id: Date.now().toString(),
+      title: newTitle.trim(),
+      description: newDescription.trim() || undefined,
+      difficulty: newDifficulty,
+      xp: diff.xp,
+      statBoost: `+${statVal} ${cat.statBoost}`,
+      completed: false,
+    };
+    setQuests((prev) => [newQuest, ...prev]);
+    setNewTitle("");
+    setNewDescription("");
+    setNewCategory("productivity");
+    setNewDifficulty("medium");
+    setCreateOpen(false);
   };
 
   return (
@@ -73,7 +110,7 @@ const Quests = () => {
               <Sparkles className="w-4 h-4" />
               AI Generate
             </Button>
-            <Button className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-display uppercase tracking-wider text-xs">
+            <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-display uppercase tracking-wider text-xs">
               <Plus className="w-4 h-4" />
               Create Quest
             </Button>
@@ -219,6 +256,78 @@ const Quests = () => {
             </div>
           </div>
         </div>
+
+        {/* Create Quest Dialog */}
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogContent className="glass-panel border-border/50 bg-background/95 backdrop-blur-xl sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl font-bold text-foreground">Create New Quest</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div className="space-y-2">
+                <label className="text-sm font-body text-muted-foreground">Quest Title</label>
+                <Input
+                  placeholder="e.g., Morning Workout"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="bg-secondary/60 border-border/40 font-body placeholder:text-muted-foreground/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-body text-muted-foreground">Description</label>
+                <Textarea
+                  placeholder="What do you need to do?"
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  className="bg-secondary/60 border-border/40 font-body placeholder:text-muted-foreground/50 min-h-[70px] resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-body text-muted-foreground">Category</label>
+                  <Select value={newCategory} onValueChange={(v) => setNewCategory(v as keyof typeof categoryConfig)}>
+                    <SelectTrigger className="bg-secondary/60 border-border/40 font-body text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-border/50">
+                      {Object.entries(categoryConfig).map(([key, cfg]) => {
+                        const Icon = cfg.icon;
+                        return (
+                          <SelectItem key={key} value={key}>
+                            <span className="flex items-center gap-2">
+                              <Icon className="w-3.5 h-3.5 text-accent" />
+                              {cfg.label}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-body text-muted-foreground">Difficulty</label>
+                  <Select value={newDifficulty} onValueChange={(v) => setNewDifficulty(v as "easy" | "medium" | "hard")}>
+                    <SelectTrigger className="bg-secondary/60 border-border/40 font-body text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-border/50">
+                      <SelectItem value="easy">Easy (+25 XP)</SelectItem>
+                      <SelectItem value="medium">Medium (+50 XP)</SelectItem>
+                      <SelectItem value="hard">Hard (+100 XP)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button
+                onClick={handleCreateQuest}
+                disabled={!newTitle.trim()}
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-display uppercase tracking-wider text-sm mt-2"
+              >
+                Create Quest
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
