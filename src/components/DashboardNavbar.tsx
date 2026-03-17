@@ -4,20 +4,19 @@ import {
   Target,
   CalendarCheck,
   Flag,
-  Users,
   Trophy,
   Award,
   BarChart3,
   Settings,
   LogOut,
 } from "lucide-react";
+import { Show, UserButton, SignOutButton } from "@clerk/react";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Quests", icon: Target, path: "/quests" },
   { label: "Daily Quests", icon: CalendarCheck, path: "/daily-quests" },
   { label: "Goals", icon: Flag, path: "/goals" },
-  { label: "Community", icon: Users, path: "/community" },
   { label: "Leaderboard", icon: Trophy, path: "/leaderboard" },
   { label: "Achievements", icon: Award, path: "/achievements" },
   { label: "Analytics", icon: BarChart3, path: "/analytics" },
@@ -40,7 +39,8 @@ const DashboardNavbar = () => {
             <span className="text-primary text-xs font-bold">HL</span>
           </div>
           <span>
-            Hunter<br className="hidden" />
+            Hunter
+            <br className="hidden" />
             <span className="text-primary text-glow"> Level</span>
           </span>
         </button>
@@ -67,20 +67,27 @@ const DashboardNavbar = () => {
         </div>
 
         {/* User */}
+
         <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden sm:block text-right">
+        <Show when="signed-in">
+          <UserButton />
+          <SignOutButton>
+            <button
+              onClick={() => navigate("/")}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </SignOutButton>
+        </Show>
+          {/* <div className="hidden sm:block text-right">
             <div className="font-display text-xs tracking-wider text-foreground">Being Specter</div>
             <div className="font-display text-[10px] tracking-wider text-muted-foreground">Level 7</div>
           </div>
           <div className="w-8 h-8 rounded-full bg-accent/20 neon-border-blue flex items-center justify-center">
             <span className="text-accent font-display text-sm font-bold">E</span>
-          </div>
-          <button
-            onClick={() => navigate("/")}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          </div> */}
+          
         </div>
       </div>
     </nav>

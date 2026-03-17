@@ -1,11 +1,12 @@
 import { useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { Show, SignIn, SignInButton, SignUpButton, UserButton } from "@clerk/react";
 
 // Load all frames via Vite glob — sorted so they play in order
 const frameModules = import.meta.glob<{ default: string }>(
   "@/assets/hero-anime/frame_*.webp",
-  { eager: true }
+  { eager: true },
 );
 const FRAME_URLS: string[] = Object.keys(frameModules)
   .sort()
@@ -34,7 +35,8 @@ const HeroAnimCanvas = () => {
     const elapsed = timestamp - lastTimeRef.current;
     if (elapsed >= FRAME_DELAY_MS) {
       lastTimeRef.current = timestamp - (elapsed % FRAME_DELAY_MS);
-      frameIndexRef.current = (frameIndexRef.current + 1) % imagesRef.current.length;
+      frameIndexRef.current =
+        (frameIndexRef.current + 1) % imagesRef.current.length;
 
       const img = imagesRef.current[frameIndexRef.current];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -42,8 +44,12 @@ const HeroAnimCanvas = () => {
 
       // Subtle purple vignette overlay to blend with dark theme
       const vignette = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.25,
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.9
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.height * 0.25,
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.height * 0.9,
       );
       vignette.addColorStop(0, "rgba(0,0,0,0)");
       vignette.addColorStop(1, "rgba(10,4,30,0.72)");
@@ -51,7 +57,12 @@ const HeroAnimCanvas = () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Bottom fade-out so it blends into the card background
-      const fadeBottom = ctx.createLinearGradient(0, canvas.height * 0.7, 0, canvas.height);
+      const fadeBottom = ctx.createLinearGradient(
+        0,
+        canvas.height * 0.7,
+        0,
+        canvas.height,
+      );
       fadeBottom.addColorStop(0, "rgba(10,4,30,0)");
       fadeBottom.addColorStop(1, "rgba(10,4,30,0.95)");
       ctx.fillStyle = fadeBottom;
@@ -75,7 +86,8 @@ const HeroAnimCanvas = () => {
           const canvas = canvasRef.current;
           if (canvas) {
             const ctx = canvas.getContext("2d");
-            if (ctx) ctx.drawImage(images[0], 0, 0, canvas.width, canvas.height);
+            if (ctx)
+              ctx.drawImage(images[0], 0, 0, canvas.width, canvas.height);
           }
         }
       };
@@ -95,7 +107,8 @@ const HeroAnimCanvas = () => {
       height={550}
       className="w-full h-auto relative z-10"
       style={{
-        filter: "drop-shadow(0 0 32px hsl(270 80% 60% / 0.55)) drop-shadow(0 0 80px hsl(200 100% 55% / 0.2))",
+        filter:
+          "drop-shadow(0 0 32px hsl(270 80% 60% / 0.55)) drop-shadow(0 0 80px hsl(200 100% 55% / 0.2))",
       }}
     />
   );
@@ -115,17 +128,29 @@ const HeroSection = () => {
   const panelVariants = {
     hidden: { opacity: 0, x: 80, filter: "blur(10px)" },
     visible: (i: number) => ({
-      opacity: 1, x: 0, filter: "blur(0px)",
-      transition: { delay: 1.2 + i * 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] as const },
+      opacity: 1,
+      x: 0,
+      filter: "blur(0px)",
+      transition: {
+        delay: 1.2 + i * 0.2,
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1] as const,
+      },
     }),
   };
 
   return (
-    <section ref={ref} className="relative h-screen flex items-center justify-center overflow-hidden">
+    <section
+      ref={ref}
+      className="relative h-screen flex items-center justify-center overflow-hidden"
+    >
       {/* Radial background glow */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(270_80%_60%_/_0.08)_0%,_transparent_60%)]" />
 
-      <motion.div style={{ y: textY, opacity }} className="relative z-10 container mx-auto px-6 flex flex-col lg:flex-row items-center gap-12">
+      <motion.div
+        style={{ y: textY, opacity }}
+        className="relative z-10 container mx-auto px-6 flex flex-col lg:flex-row items-center gap-12"
+      >
         {/* Left: Text */}
         <div className="flex-1 text-center lg:text-left">
           <motion.div
@@ -135,7 +160,9 @@ const HeroSection = () => {
           >
             <div className="inline-flex items-center gap-2 glass-panel neon-border px-4 py-2 mb-8">
               <div className="w-2 h-2 rounded-full bg-neon-purple animate-pulse-glow" />
-              <span className="font-display text-xs tracking-[0.2em] text-neon-purple uppercase">System Online</span>
+              <span className="font-display text-xs tracking-[0.2em] text-neon-purple uppercase">
+                System Online
+              </span>
             </div>
           </motion.div>
 
@@ -167,8 +194,14 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
           >
-            <button onClick={() => navigate("/dashboard")} className="btn-primary-glow text-base">Start Your Quest</button>
-            <button className="btn-outline-glow text-base">View Demo</button>
+            <SignInButton forceRedirectUrl="/dashboard">
+              <button className="btn-primary-glow text-base">
+                Login
+              </button>
+            </SignInButton>
+            <SignUpButton forceRedirectUrl="/dashboard">
+              <button className="btn-outline-glow text-base">Sign up</button>
+            </SignUpButton>
           </motion.div>
         </div>
 
@@ -205,10 +238,19 @@ const HeroSection = () => {
                 initial="hidden"
                 animate="visible"
                 className="absolute glass-panel neon-border px-4 py-3 hidden lg:block z-30"
-                style={{ top: panel.top, right: panel.right, bottom: panel.bottom, left: panel.left }}
+                style={{
+                  top: panel.top,
+                  right: panel.right,
+                  bottom: panel.bottom,
+                  left: panel.left,
+                }}
               >
-                <div className="font-display text-[10px] tracking-[0.2em] text-muted-foreground mb-1">{panel.label}</div>
-                <div className="font-display text-2xl font-bold text-primary text-glow">{panel.value}</div>
+                <div className="font-display text-[10px] tracking-[0.2em] text-muted-foreground mb-1">
+                  {panel.label}
+                </div>
+                <div className="font-display text-2xl font-bold text-primary text-glow">
+                  {panel.value}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -220,7 +262,9 @@ const HeroSection = () => {
         style={{ opacity }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
-        <span className="font-display text-[10px] tracking-[0.3em] text-muted-foreground uppercase">Scroll</span>
+        <span className="font-display text-[10px] tracking-[0.3em] text-muted-foreground uppercase">
+          Scroll
+        </span>
         <div className="w-px h-8 bg-gradient-to-b from-neon-purple/50 to-transparent" />
       </motion.div>
     </section>

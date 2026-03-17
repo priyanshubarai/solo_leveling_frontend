@@ -24,6 +24,8 @@ import {
   Shield,
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@clerk/react";
+import { Navigate, redirect } from "react-router-dom";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
@@ -63,7 +65,21 @@ const quickActions = [
 ];
 
 const Dashboard = () => {
+
+  const { isSignedIn, isLoaded } = useAuth();
+
   const [tipsOpen, setTipsOpen] = useState(false);
+
+  // Wait for Clerk to finish loading before checking auth status.
+  // Without this, isSignedIn is `undefined` on first render and triggers
+  // an immediate redirect back to "/" even for authenticated users.
+  if (!isLoaded) {
+    return null; // or a loading spinner
+  }
+
+  if (!isSignedIn) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
