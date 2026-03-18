@@ -1,6 +1,8 @@
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { motion } from "framer-motion";
 import { Trophy, Lock, Star, Target, Swords, Zap, Shield, Crown, Flame, Award, TrendingUp, Gem } from "lucide-react";
+import { useAuth } from "@clerk/react";
+import { Navigate } from "react-router-dom";
 
 interface Achievement {
   id: string;
@@ -31,6 +33,20 @@ const achievements: Achievement[] = [
 
 const Achievements = () => {
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
+
+  const { isSignedIn, isLoaded } = useAuth();
+
+  // Wait for Clerk to finish loading before checking auth status.
+  // Without this, isSignedIn is `undefined` on first render and triggers
+  // an immediate redirect back to "/" even for authenticated users.
+  
+  if (!isLoaded) {
+    return null; // or a loading spinner
+  }
+
+  if (!isSignedIn) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

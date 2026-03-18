@@ -73,6 +73,7 @@ const Dashboard = () => {
   // Wait for Clerk to finish loading before checking auth status.
   // Without this, isSignedIn is `undefined` on first render and triggers
   // an immediate redirect back to "/" even for authenticated users.
+  
   if (!isLoaded) {
     return null; // or a loading spinner
   }

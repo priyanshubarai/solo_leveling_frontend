@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Trophy, Zap, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import { useAuth } from "@clerk/react";
+import { Navigate } from "react-router-dom";
 
 const timeFilters = ["Today", "This Week", "This Month", "All Time"] as const;
 type TimeFilter = (typeof timeFilters)[number];
@@ -61,6 +63,20 @@ const trophyColors: Record<number, string> = {
 const Leaderboard = () => {
   const [filter, setFilter] = useState<TimeFilter>("This Week");
   const players = allData[filter];
+
+  const { isSignedIn, isLoaded } = useAuth();
+
+  // Wait for Clerk to finish loading before checking auth status.
+  // Without this, isSignedIn is `undefined` on first render and triggers
+  // an immediate redirect back to "/" even for authenticated users.
+  
+  if (!isLoaded) {
+    return null; // or a loading spinner
+  }
+
+  if (!isSignedIn) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

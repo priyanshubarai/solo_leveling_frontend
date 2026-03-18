@@ -40,6 +40,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@clerk/react";
+import { Navigate } from "react-router-dom";
 
 type SettingsTab = "profile" | "notifications" | "appearance" | "privacy" | "account";
 
@@ -112,6 +114,20 @@ const SettingsPage = () => {
       {children}
     </div>
   );
+
+  const { isSignedIn, isLoaded } = useAuth();
+
+  // Wait for Clerk to finish loading before checking auth status.
+  // Without this, isSignedIn is `undefined` on first render and triggers
+  // an immediate redirect back to "/" even for authenticated users.
+  
+  if (!isLoaded) {
+    return null; // or a loading spinner
+  }
+
+  if (!isSignedIn) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

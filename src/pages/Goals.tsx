@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@clerk/react";
+import { Navigate } from "react-router-dom";
 
 interface Goal {
   id: string;
@@ -121,6 +123,20 @@ const Goals = () => {
     const f = filter[col.type];
     return col.goals.filter((g) => (f === "current" ? !g.completed : g.completed));
   };
+
+  const { isSignedIn, isLoaded } = useAuth();
+
+  // Wait for Clerk to finish loading before checking auth status.
+  // Without this, isSignedIn is `undefined` on first render and triggers
+  // an immediate redirect back to "/" even for authenticated users.
+  
+  if (!isLoaded) {
+    return null; // or a loading spinner
+  }
+
+  if (!isSignedIn) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
