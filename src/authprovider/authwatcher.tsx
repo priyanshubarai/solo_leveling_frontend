@@ -13,10 +13,9 @@ export default function AuthWatcher() {
       return;
     } 
     console.log("User is signed in!");
+    hasSynced.current = true;
     (async () => {
-        const res = await syncUser();
-        hasSynced.current = true;
-        console.log("New user created : ",res.status,res.data);   
+        await syncUser();
     })();
   }, [isLoaded, isSignedIn]);
 
