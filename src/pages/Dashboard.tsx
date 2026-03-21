@@ -34,7 +34,7 @@ const Dashboard = () => {
       <main className="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-8 space-y-6">
         <WelcomeHeader username={userinfo?.username || "User"}/>
         <PlayerStats userinfo={userinfo}/>
-        <StatPointsBanner />
+        {/* <StatPointsBanner /> */}
         <QuestsSection />
         <QuickActions />
         <SystemMessage />
