@@ -20,6 +20,9 @@ const ActiveQuests = () => {
   } });
   const quests = res?.data?.data ?? [];
 
+  if(res.isPending) return <div>Loading....</div>
+  if(res.isError) return <div>Error....</div>
+
   return (
     <div className="glass-panel neon-border p-5 space-y-4">
       <div className="flex items-center justify-between">
@@ -81,6 +84,9 @@ const DailyTraining = () => {
         return res.data;
     }})
     const dailyquests = res?.data?.data;
+
+    if(res.isPending) return <div>Loading....</div>
+    if(res.isError) return <div>Error....</div>
 
   return (
     <div className="glass-panel neon-border p-5 space-y-4">
