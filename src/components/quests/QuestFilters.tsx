@@ -14,7 +14,7 @@ interface QuestFiltersProps {
   setDifficultyFilter: (value: string) => void;
   matchPreference: boolean;
   setMatchPreference: (val: boolean) => void;
-  preference: "easy" | "medium" | "hard";
+  preference: "Easy" | "Moderate" | "Hard" | "Legendary";
   preferenceLabel: string;
   activeCount: number;
   completedCount: number;
