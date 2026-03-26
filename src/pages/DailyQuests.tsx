@@ -10,13 +10,13 @@ import CompletionDonut from "@/components/daily-quests/CompletionDonut";
 import DailyProgressChart from "@/components/daily-quests/DailyProgressChart";
 import SystemNotice from "@/components/daily-quests/SystemNotice";
 import CreateQuestDialog from "@/components/daily-quests/CreateQuestDialog";
-import { DailyQuest, monthNames , DailyQuestCompletion } from "@/components/daily-quests/types";
-import { useQuery } from "@tanstack/react-query";
+import { DailyQuest, monthNames, DailyQuestCompletion } from "@/components/daily-quests/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 
 const DailyQuests = () => {
   const { isSignedIn, isLoaded, userId } = useAuth();
-  
+
   const [quests, setQuests] = useState<DailyQuest[]>([]);
   const [questsCompletion, setQuestsCompletion] = useState<Record<number, DailyQuestCompletion[]>>({});
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth()); // 0-indexed: Jan=0, Mar=2…
@@ -24,14 +24,12 @@ const DailyQuests = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState("productivity");
-  const [newIcon, setNewIcon] = useState("⚡");
 
   const habits = useQuery({
     queryKey: ["habits", userId],
     queryFn: async () => {
       const response = await api.get(`/users/${userId}/habits`);
       setQuests(response.data?.data);
-      console.log("habits fetched : ",response.data?.data);
       return response.data.data;
     },
     enabled: !!userId,
@@ -41,17 +39,17 @@ const DailyQuests = () => {
     queryKey: ["habits-completion", userId, currentMonth, currentYear, quests.length],
     queryFn: async () => {
       const completionMap: Record<number, DailyQuestCompletion[]> = {};
-      
+
       await Promise.all(
         quests.map(async (q) => {
           const habitIdNum = Number(q.habitid);
-          const response = await api.get(`/users/${userId}/habits/${habitIdNum}`);
+          const response = await api.get(`/users/${userId}/habits/${habitIdNum}?month=${currentMonth}&year=${currentYear}`);
           completionMap[habitIdNum] = response.data?.data || [];
         })
       );
 
       setQuestsCompletion(completionMap);
-      console.log("completionMap : ",completionMap);
+      console.log("completionMap : ", completionMap);
       return completionMap;
     },
     enabled: !!userId && quests.length > 0,
@@ -75,12 +73,31 @@ const DailyQuests = () => {
     [quests, questsCompletion, dayNumbers, currentMonth, currentYear]
   );
 
-  if (!isLoaded) return null;
-  if (!isSignedIn) return <Navigate to="/" replace />;
+  const habitsMutation = useMutation({
+    mutationFn: async (newQuest: { habittitle: string; category: string; }) => {
+      const response = await api.post(`/users/${userId}/habits`, newQuest);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      habits.refetch();
+    },
+    onError: (error) => {
+      console.error("Error creating habit:", error);
+    }
+  });
 
-  const today = new Date();
-  const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
-  const currentDay = isCurrentMonth ? today.getDate() : -1;
+  const handleCreate = () => {
+    if (!newTitle.trim()) return;
+    
+    habitsMutation.mutate({
+      habittitle: newTitle.trim(),
+      category: newCategory,
+    });
+
+    setNewTitle("");
+    setNewCategory("productivity");
+    setCreateOpen(false);
+  };
 
   const handleToggleDay = async (questId: string, day: number) => {
     const habitIdNum = Number(questId);
@@ -132,20 +149,12 @@ const DailyQuests = () => {
   }, 0);
   const completionPct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
 
-  const handleCreate = () => {
-    if (!newTitle.trim()) return;
-    // const newQuest: DailyQuest = {
-    //   id: Date.now().toString(),
-    //   title: newTitle.trim(),
-    //   emoji: newIcon || "⚡",
-    //   completedDays: new Set(),
-    // };
-    // setQuests((prev) => [...prev, newQuest]);
-    setNewTitle("");
-    setNewCategory("productivity");
-    setNewIcon("⚡");
-    setCreateOpen(false);
-  };
+  if (!isLoaded) return null;
+  if (!isSignedIn) return <Navigate to="/" replace />;
+
+  const today = new Date();
+  const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
+  const currentDay = isCurrentMonth ? today.getDate() : -1;
 
   return (
     <div className="min-h-screen bg-background">
@@ -185,8 +194,6 @@ const DailyQuests = () => {
           setNewTitle={setNewTitle}
           newCategory={newCategory}
           setNewCategory={setNewCategory}
-          newIcon={newIcon}
-          setNewIcon={setNewIcon}
           onCreate={handleCreate}
         />
       </main>

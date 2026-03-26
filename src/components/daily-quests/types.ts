@@ -3,6 +3,7 @@ export interface DailyQuest {
   clerkuserid: string;
   habittitle: string;
   category: string;
+  emoji: string;
 }
 
 export interface DailyQuestCompletion {
@@ -30,5 +31,3 @@ export const categoryOptions = [
   { value: "social", label: "👥 Social → +SEN", emoji: "👥", stat: "SEN" },
   { value: "creativity", label: "🎨 Creativity → +INT", emoji: "🎨", stat: "INT" },
 ];
-
-export const iconOptions = ["🏃", "💧", "📊", "✌️", "🧘", "📈", "🤖", "☁️", "🐙", "🎯", "📦", "🚀", "🎮", "🧠", "🎵"];

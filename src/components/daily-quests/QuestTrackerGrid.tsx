@@ -1,6 +1,6 @@
 import { GripVertical } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DailyQuest, DailyQuestCompletion } from "./types";
+import { DailyQuest, DailyQuestCompletion , categoryOptions } from "./types";
 
 interface QuestTrackerGridProps {
   quests: DailyQuest[];
@@ -26,7 +26,7 @@ const QuestTrackerGrid = ({
   <div className="glass-panel p-5 mb-6 overflow-x-auto">
     <div className="flex items-center justify-between mb-4">
       <h2 className="font-display text-lg font-bold text-foreground">My Daily Quests</h2>
-      <span className="text-muted-foreground text-xs font-body">Drag to reorder • Click pencil to edit</span>
+      <span className="text-muted-foreground text-xs font-body"> • Click pencil to edit</span>
     </div>
 
     <div className="min-w-[700px]">
@@ -59,7 +59,9 @@ const QuestTrackerGrid = ({
           >
             <div className="flex items-center gap-2 py-2.5 px-2">
               <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-              <span className="text-sm">{"⚡"}</span> {/* Default emoji since it's not in DB yet */}
+              <span className="text-sm">
+                {categoryOptions.find(c => c.value === quest.category.toLowerCase())?.emoji || "⚡"}
+              </span>
               <span className="font-body text-sm text-foreground truncate">{quest.habittitle}</span>
             </div>
             {dayNumbers.map((day) => {

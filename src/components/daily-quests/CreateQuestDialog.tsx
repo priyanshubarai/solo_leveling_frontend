@@ -2,7 +2,7 @@ import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { categoryOptions, iconOptions, DailyQuest } from "./types";
+import { categoryOptions } from "./types";
 
 interface CreateQuestDialogProps {
   open: boolean;
@@ -11,8 +11,6 @@ interface CreateQuestDialogProps {
   setNewTitle: (v: string) => void;
   newCategory: string;
   setNewCategory: (v: string) => void;
-  newIcon: string;
-  setNewIcon: (v: string) => void;
   onCreate: () => void;
 }
 
@@ -23,8 +21,6 @@ const CreateQuestDialog = ({
   setNewTitle,
   newCategory,
   setNewCategory,
-  newIcon,
-  setNewIcon,
   onCreate,
 }: CreateQuestDialogProps) => {
   const selectedCategory = categoryOptions.find((c) => c.value === newCategory)!;
@@ -63,7 +59,7 @@ const CreateQuestDialog = ({
             </select>
           </div>
 
-          {/* Icon Picker Grid */}
+          {/* Icon Picker Grid
           <div className="space-y-2">
             <label className="text-sm font-body text-muted-foreground">Icon</label>
             <div className="flex flex-wrap gap-2">
@@ -82,7 +78,7 @@ const CreateQuestDialog = ({
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Stat Reward Banner */}
           <div className="flex items-center gap-2 rounded-lg bg-accent/10 border border-accent/30 px-4 py-3">
