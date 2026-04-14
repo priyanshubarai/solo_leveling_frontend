@@ -65,7 +65,7 @@ const QuestsPage = () => {
     queryKey: ["quests", userId],
     queryFn: async () => {
       if (!userId) throw new Error("Not authenticated");
-      const response = await api.get(`/users/${userId}/quests`);
+      const response = await api.get(`/users/me/quests`);
       return response.data;
     },
     enabled: !!userId && isLoaded,
@@ -92,7 +92,7 @@ const QuestsPage = () => {
 
   const completeQuestMutation = useMutation({
     mutationFn: async (questId: string) => {
-      const res = await api.patch(`/users/${userId}/quests`, {
+      const res = await api.patch(`/users/me/quests`, {
         questid: questId,
         completed: true,
       });
@@ -104,7 +104,7 @@ const QuestsPage = () => {
 
   const createQuestMutation = useMutation({
     mutationFn: async (apiPayload) => {
-      const res = await api.post(`/users/${userId}/quests`, apiPayload);
+      const res = await api.post(`/users/me/quests`, apiPayload);
       return res;
     },
     onError: () => questsQuery.refetch(),

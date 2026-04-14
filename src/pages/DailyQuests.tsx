@@ -28,7 +28,7 @@ const DailyQuests = () => {
   const habits = useQuery({
     queryKey: ["habits", userId],
     queryFn: async () => {
-      const response = await api.get(`/users/${userId}/habits`);
+      const response = await api.get(`/users/me/habits`);
       setQuests(response.data?.data);
       return response.data.data;
     },
@@ -43,7 +43,7 @@ const DailyQuests = () => {
       await Promise.all(
         quests.map(async (q) => {
           const habitIdNum = Number(q.habitid);
-          const response = await api.get(`/users/${userId}/habits/${habitIdNum}?month=${currentMonth}&year=${currentYear}`);
+          const response = await api.get(`/users/me/habits/${habitIdNum}?month=${currentMonth}&year=${currentYear}`);
           completionMap[habitIdNum] = response.data?.data || [];
         })
       );
@@ -75,7 +75,7 @@ const DailyQuests = () => {
 
   const habitsMutation = useMutation({
     mutationFn: async (newQuest: { habittitle: string; category: string; }) => {
-      const response = await api.post(`/users/${userId}/habits`, newQuest);
+      const response = await api.post(`/users/me/habits`, newQuest);
       return response.data.data;
     },
     onSuccess: () => {
@@ -108,7 +108,7 @@ const DailyQuests = () => {
     try {
       if (existing) {
         // DELETE
-        await api.delete(`/users/${userId}/habits/${habitIdNum}`, {
+        await api.delete(`/users/me/habits/${habitIdNum}`, {
           data: { day, month: currentMonth, year: currentYear }
         });
         setQuestsCompletion(prev => ({
@@ -117,7 +117,7 @@ const DailyQuests = () => {
         }));
       } else {
         // POST
-        const response = await api.post(`/users/${userId}/habits/${habitIdNum}`, {
+        const response = await api.post(`/users/me/habits/${habitIdNum}`, {
           day, month: currentMonth, year: currentYear
         });
         const newCompletion = response.data.data;

@@ -20,9 +20,9 @@ import { useUser } from "@clerk/react";
 import api from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
 
-const PlayerCard = ({userinfo}) => {
-    
-  if(!userinfo) return <div>Loading....!!!</div>
+const PlayerCard = ({ userinfo }) => {
+
+  if (!userinfo) return <div>Loading....!!!</div>
 
   return (
     <div className="glass-panel neon-border p-5 space-y-4">
@@ -83,7 +83,7 @@ const HunterStats = () => {
   const res = useQuery({
     queryKey: ["statPoints", user?.id],
     queryFn: async () => {
-      const res = await api.get(`/users/${user.id}/stats`);
+      const res = await api.get(`/users/me/stats`);
       return res.data;
     },
     enabled: !!user?.id,
@@ -131,7 +131,7 @@ const HunterStats = () => {
   );
 };
 
-const PlayerStats = ({userinfo}) => (
+const PlayerStats = ({ userinfo }) => (
   <motion.div
     custom={1}
     variants={fadeUp}
@@ -139,7 +139,7 @@ const PlayerStats = ({userinfo}) => (
     animate="visible"
     className="grid grid-cols-1 lg:grid-cols-2 gap-4"
   >
-    <PlayerCard userinfo={userinfo}/>
+    <PlayerCard userinfo={userinfo} />
     <HunterStats />
   </motion.div>
 );

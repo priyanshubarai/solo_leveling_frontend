@@ -2,10 +2,8 @@ import api from "../axios";
 
 export const syncUser = async () => {
     console.log("Sync User is Running >>")
-    const res = await api.post("/users");
-    const clerkuserid = res.data.data[0].clerkuserid;
-
-    const res2 = await api.post(`/users/${clerkuserid}/stats`)
+    const res = await api.post("/users");    
+    await api.post(`/users/me/stats`);
      
     return res.data.data[0];
 }

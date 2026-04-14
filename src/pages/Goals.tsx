@@ -29,7 +29,7 @@ const Goals = () => {
   const goalsquery = useQuery({
     queryKey: ["goals"],
     queryFn: async () => {
-      const res = await api.get(`/users/${userId}/goals`);
+      const res = await api.get(`/users/me/goals`);
       // Extract data from response { message: "success", data: [...] }
       const fetchedGoals = res.data.data || res.data; 
       setGoals(fetchedGoals);
@@ -67,7 +67,7 @@ const Goals = () => {
       const goal = goals.find(g => g.goalid === goalid);
       if (!goal) return;
 
-      await api.patch(`/users/${userId}/goals`, {
+      await api.patch(`/users/me/goals`, {
         goalid,
         completed: !goal.completed
       });
@@ -86,7 +86,7 @@ const Goals = () => {
     try {
       const category = newGoal.type === "annual" ? "Annualy" : newGoal.type.charAt(0).toUpperCase() + newGoal.type.slice(1);
       
-      await api.post(`/users/${userId}/goals`, {
+      await api.post(`/users/me/goals`, {
         goaltitle: newGoal.title,
         goaldesc: newGoal.description,
         category: category,

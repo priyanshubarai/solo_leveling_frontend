@@ -17,7 +17,7 @@ const Dashboard = () => {
   const res = useQuery({
     queryKey: ["userinfo", user?.id],
     queryFn: async () => {
-      const res = await api.get(`/users/${user.id}`);
+      const res = await api.get(`/users/me`);
       return res.data;
     },
     enabled: !!user?.id, 

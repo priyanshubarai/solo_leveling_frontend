@@ -60,7 +60,7 @@ const Achievements = () => {
   const achievementQuery = useQuery({
     queryKey: ["achievements",achievements],
     queryFn: async () => {
-      const res = await api.get(`/users/${userId}/achievements`);
+      const res = await api.get(`/users/me/achievements`);
       setAchievements(res.data.data);
       return res.data;
     },

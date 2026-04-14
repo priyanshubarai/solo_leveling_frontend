@@ -15,7 +15,7 @@ import api from "@/lib/axios";
 const ActiveQuests = () => {
   const { user } = useUser();
   const res = useQuery({ queryKey: ["quests", user?.id], queryFn: async () => {
-    const res = await api.get(`/users/${user.id}/quests?completed=false`);
+    const res = await api.get(`/users/me/quests?completed=false`);
     return res.data;
   } });
   const quests = res?.data?.data ?? [];
@@ -40,7 +40,7 @@ const ActiveQuests = () => {
       <div className="space-y-3">
         {quests.map((quest) => (
           <div
-            key={quest.questtitle}
+            key={quest.questid}
             className={`border-l-2 pl-4 py-2 flex items-center justify-between bg-secondary/30 rounded-r-md pr-3`}
           >
             <div>
@@ -80,7 +80,7 @@ const ActiveQuests = () => {
 const DailyTraining = () => {
     const {user} = useUser();
     const res = useQuery({queryKey : ['dailyquests',user?.id],queryFn : async()=>{
-        const res = await api.get(`/users/${user.id}/habits`);
+        const res = await api.get(`/users/me/habits`);
         return res.data;
     }})
     const dailyquests = res?.data?.data;
