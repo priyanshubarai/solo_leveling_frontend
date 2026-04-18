@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,94 +11,89 @@ import GoalColumnComponent from "@/components/goals/GoalColumn";
 import AddGoalDialog from "@/components/goals/AddGoalDialog";
 
 // Types
-import { Goal, GoalColumn, GoalType } from "@/types/goals";
-import { useQuery } from "@tanstack/react-query";
+import { GoalColumn, GoalType } from "@/types/goals";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/axios";
 
 const Goals = () => {
-  const { isSignedIn, isLoaded , userId } = useAuth();
-  const [goals , setGoals] = useState<Goal[]>([]);
+  const { isSignedIn, isLoaded, userId } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<GoalType>("weekly");
-  const [columns, setColumns] = useState<GoalColumn[]>([
-    { type: "weekly", label: "Weekly Goals", goals: [] },
-    { type: "monthly", label: "Monthly Goals", goals: [] },
-    { type: "annual", label: "Annual Goals", goals: [] },
-  ]);
-
-  const goalsquery = useQuery({
+  const goals = useQuery({
     queryKey: ["goals"],
     queryFn: async () => {
       const res = await api.get(`/users/me/goals`);
-      // Extract data from response { message: "success", data: [...] }
-      const fetchedGoals = res.data.data || res.data; 
-      setGoals(fetchedGoals);
+      const fetchedGoals = res.data.data || res.data;
       return fetchedGoals;
     },
     enabled: !!userId,
   });
 
-  useEffect(() => {
-    if (goals && Array.isArray(goals)) {
-      setColumns([
-        { 
-          type: "weekly", 
-          label: "Weekly Goals", 
-          goals: goals.filter(g => g.category?.toLowerCase() === "weekly") 
-        },
-        { 
-          type: "monthly", 
-          label: "Monthly Goals", 
-          goals: goals.filter(g => g.category?.toLowerCase() === "monthly") 
-        },
-        { 
-          type: "annual", 
-          label: "Annual Goals", 
-          goals: goals.filter(g => g.category?.toLowerCase() === "annualy") 
-        },
-      ]);
-    }
-  }, [goals]);
+  const goalsData = Array.isArray(goals.data) ? goals.data : [];
 
+  const columns: GoalColumn[] = useMemo(() => [
+    {
+      type: "weekly",
+      label: "Weekly Goals",
+      goals: goalsData.filter((g: any) => g.category?.toLowerCase() === "weekly")
+    },
+    {
+      type: "monthly",
+      label: "Monthly Goals",
+      goals: goalsData.filter((g: any) => g.category?.toLowerCase() === "monthly")
+    },
+    {
+      type: "annual",
+      label: "Annual Goals",
+      goals: goalsData.filter((g: any) => g.category?.toLowerCase() === "annualy")
+    },
+  ], [goalsData]);
 
-  const toggleComplete = async (colType: GoalType, goalid: number) => {
-    try {
-      // Find the goal to get its current status
-      const goal = goals.find(g => g.goalid === goalid);
-      if (!goal) return;
-
-      await api.patch(`/users/me/goals`, {
-        goalid,
-        completed: !goal.completed
-      });
-      goalsquery.refetch();
-    } catch (error) {
+  const toggleMutation = useMutation({
+    mutationFn: async ({ goalid, completed }: { goalid: number; completed: boolean }) => {
+      await api.patch(`/users/me/goals`, { goalid, completed });
+    },
+    onSuccess: () => {
+      goals.refetch();
+    },
+    onError: (error) => {
       console.error("Error updating goal:", error);
     }
-  };
+  });
 
-  const openAddGoalDialog = (colType: GoalType) => {
+  const toggleComplete = useCallback((colType: GoalType, goalid: number) => {
+    const goal = goalsData.find((g: any) => g.goalid === goalid);
+    if (!goal) return;
+    toggleMutation.mutate({ goalid, completed: !goal.completed });
+  }, [goalsData, toggleMutation]);
+
+  const openAddGoalDialog = useCallback((colType: GoalType) => {
     setSelectedType(colType);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleAddGoal = async (newGoal: { title: string; description: string; type: GoalType; }) => {
-    try {
+  const addGoalMutation = useMutation({
+    mutationFn: async (newGoal: { title: string; description: string; type: GoalType }) => {
       const category = newGoal.type === "annual" ? "Annualy" : newGoal.type.charAt(0).toUpperCase() + newGoal.type.slice(1);
-      
       await api.post(`/users/me/goals`, {
         goaltitle: newGoal.title,
         goaldesc: newGoal.description,
         category: category,
         completed: false
       });
-      
-      goalsquery.refetch();
+    },
+    onSuccess: () => {
+      goals.refetch();
       setDialogOpen(false);
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error("Error adding goal:", error);
     }
-  };
+  });
+
+  const handleAddGoal = useCallback((newGoal: { title: string; description: string; type: GoalType }) => {
+    addGoalMutation.mutate(newGoal);
+  }, [addGoalMutation]);
 
 
   if (!isLoaded) {

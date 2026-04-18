@@ -6,7 +6,7 @@ import HowItWorksSection from "@/components/HowItWorksSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import CTASection from "@/components/CTASection";
 
-const Index = () => {
+export default function LandingPage() {
   return (
     <div className="relative min-h-screen bg-background overflow-x-hidden">
       <AtmosphericBackground />
@@ -30,5 +30,3 @@ const Index = () => {
     </div>
   );
 };
-
-export default Index;

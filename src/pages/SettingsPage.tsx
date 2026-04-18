@@ -6,7 +6,6 @@ import {
   Shield,
   Palette,
   Volume2,
-  Globe,
   Trash2,
   Save,
   Camera,

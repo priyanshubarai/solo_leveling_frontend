@@ -29,8 +29,9 @@ export const categoryConfig = {
   social: { label: "Social", icon: "Users", statBoost: "SEN" },
 } as const;
 
-export const preferenceMap: Record<"easy" | "medium" | "hard", string> = {
-  easy: "+25 XP",
-  medium: "+50 XP",
-  hard: "+100 XP",
+export const preferenceMap: Record<"Easy" | "Moderate" | "Hard" | "Legendary", string> = {
+  Easy: "+25 XP",
+  Moderate: "+50 XP",
+  Hard: "+100 XP",
+  Legendary: "+200 XP",
 };

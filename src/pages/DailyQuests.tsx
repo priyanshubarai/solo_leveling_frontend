@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@clerk/react";
 
@@ -17,8 +17,6 @@ import api from "@/lib/axios";
 const DailyQuests = () => {
   const { isSignedIn, isLoaded, userId } = useAuth();
 
-  const [quests, setQuests] = useState<DailyQuest[]>([]);
-  const [questsCompletion, setQuestsCompletion] = useState<Record<number, DailyQuestCompletion[]>>({});
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth()); // 0-indexed: Jan=0, Mar=2…
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [createOpen, setCreateOpen] = useState(false);
@@ -29,11 +27,13 @@ const DailyQuests = () => {
     queryKey: ["habits", userId],
     queryFn: async () => {
       const response = await api.get(`/users/me/habits`);
-      setQuests(response.data?.data);
       return response.data.data;
     },
     enabled: !!userId,
   });
+
+  const questsData = habits.data;
+  const quests: DailyQuest[] = useMemo(() => Array.isArray(questsData) ? questsData : [], [questsData]);
 
   const habitsCompletion = useQuery({
     queryKey: ["habits-completion", userId, currentMonth, currentYear, quests.length],
@@ -48,12 +48,13 @@ const DailyQuests = () => {
         })
       );
 
-      setQuestsCompletion(completionMap);
-      console.log("completionMap : ", completionMap);
       return completionMap;
     },
     enabled: !!userId && quests.length > 0,
   });
+
+  const completionData = habitsCompletion.data;
+  const questsCompletion: Record<number, DailyQuestCompletion[]> = useMemo(() => completionData || {}, [completionData]);
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const dayNumbers = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -86,7 +87,7 @@ const DailyQuests = () => {
     }
   });
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     if (!newTitle.trim()) return;
     
     habitsMutation.mutate({
@@ -97,39 +98,35 @@ const DailyQuests = () => {
     setNewTitle("");
     setNewCategory("productivity");
     setCreateOpen(false);
-  };
+  }, [newTitle, newCategory, habitsMutation]);
 
-  const handleToggleDay = async (questId: string, day: number) => {
+  const toggleHabitMutation = useMutation({
+    mutationFn: async ({ habitIdNum, day, existing }: { habitIdNum: number; day: number; existing: any }) => {
+      if (existing) {
+        await api.delete(`/users/me/habits/${habitIdNum}`, {
+          data: { day, month: currentMonth, year: currentYear }
+        });
+      } else {
+        await api.post(`/users/me/habits/${habitIdNum}`, {
+          day, month: currentMonth, year: currentYear
+        });
+      }
+    },
+    onSuccess: () => {
+      habitsCompletion.refetch();
+    },
+    onError: (error) => {
+      console.error("Error toggling habit completion:", error);
+    }
+  });
+
+  const handleToggleDay = useCallback((questId: string, day: number) => {
     const habitIdNum = Number(questId);
     const existing = questsCompletion[habitIdNum]?.find(
       (c) => c.day === day && c.month === currentMonth && c.year === currentYear
     );
-
-    try {
-      if (existing) {
-        // DELETE
-        await api.delete(`/users/me/habits/${habitIdNum}`, {
-          data: { day, month: currentMonth, year: currentYear }
-        });
-        setQuestsCompletion(prev => ({
-          ...prev,
-          [habitIdNum]: (prev[habitIdNum] || []).filter(c => c.dayid !== existing.dayid)
-        }));
-      } else {
-        // POST
-        const response = await api.post(`/users/me/habits/${habitIdNum}`, {
-          day, month: currentMonth, year: currentYear
-        });
-        const newCompletion = response.data.data;
-        setQuestsCompletion(prev => ({
-          ...prev,
-          [habitIdNum]: [...(prev[habitIdNum] || []), newCompletion]
-        }));
-      }
-    } catch (error) {
-      console.error("Error toggling habit completion:", error);
-    }
-  };
+    toggleHabitMutation.mutate({ habitIdNum, day, existing });
+  }, [questsCompletion, currentMonth, currentYear, toggleHabitMutation]);
 
   const prevMonth = () => {
     if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear((y) => y - 1); }

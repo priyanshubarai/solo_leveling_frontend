@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,6 @@ import api from "@/lib/axios";
 import QuestFilters from "@/components/quests/QuestFilters";
 import QuestList from "@/components/quests/QuestList";
 import {
-  difficultyConfig,
   categoryConfig,
   preferenceMap,
 } from "@/components/quests/types";
@@ -40,19 +39,11 @@ type Quest = {
   completed: boolean;
 };
 
-const normalizeDifficulty = (value: string) => {
-  const lower = value?.toLowerCase();
-  if (lower === "easy" || lower === "moderate" || lower === "hard" || lower==="legendary") return lower;
-  return "moderate";
-};
-
 const QuestsPage = () => {
-  const [quests, setQuests] = useState<Quest[]>([]);
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [matchPreference, setMatchPreference] = useState(false);
   const [preference] = useState<"Easy" | "Moderate" | "Hard" | "Legendary">("Moderate");
-  const [proTipOpen, setProTipOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -71,12 +62,8 @@ const QuestsPage = () => {
     enabled: !!userId && isLoaded,
   });
 
-  useEffect(() => {
-    const incoming = questsQuery.data?.data;
-    if (Array.isArray(incoming)) {
-      setQuests(incoming);
-    }
-  }, [questsQuery.data]);
+  const questsData = questsQuery.data?.data;
+  const quests: Quest[] = useMemo(() => Array.isArray(questsData) ? questsData : [], [questsData]);
 
   const activeQuests = quests.filter((q) => !q.completed);
   const completedQuests = quests.filter((q) => q.completed);
@@ -111,14 +98,11 @@ const QuestsPage = () => {
     onSuccess: () => questsQuery.refetch(),
   });
 
-  const handleComplete = (id: string) => {
-    setQuests((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, completed: true } : q)),
-    );
+  const handleComplete = useCallback((id: string) => {
     completeQuestMutation.mutate(id);
-  };
+  }, [completeQuestMutation]);
 
-  const handleCreateQuest = async () => {
+  const handleCreateQuest = useCallback(() => {
     const title = newTitle.trim();
     const description = newDescription.trim();
 
@@ -146,7 +130,7 @@ const QuestsPage = () => {
     setNewCategory("productivity");
     setNewDifficulty("Moderate");
     setCreateOpen(false);
-  };
+  }, [newTitle, newDescription, userId, newCategory, newDifficulty, createQuestMutation]);
 
   if (!isLoaded) return null;
   if (!isSignedIn) return <Navigate to="/" replace />;

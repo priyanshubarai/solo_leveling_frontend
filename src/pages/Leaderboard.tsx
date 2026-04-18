@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Trophy, Zap, Flame } from "lucide-react";
+import { Trophy, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { useAuth } from "@clerk/react";
@@ -22,19 +21,18 @@ const trophyColors: Record<number, string> = {
 };
 
 const Leaderboard = () => {
-  const [data, setData] = useState<leaderboardDataType[]>();
   const { userId, isSignedIn, isLoaded } = useAuth();
 
   const result = useQuery({
     queryKey: ["leaderboardData"],
     queryFn: async () => {
       const res = await api.get("/users");
-      const leaderboardData = res.data.data;
-      setData(leaderboardData)
-      return leaderboardData;
+      return res.data.data;
     },
     enabled: !!userId,
   });
+
+  const data: leaderboardDataType[] = Array.isArray(result.data) ? result.data : [];
 
   // const [filter, setFilter] = useState<TimeFilter>("All Time");
   // const players = allData[filter];
