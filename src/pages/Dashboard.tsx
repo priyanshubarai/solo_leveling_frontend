@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
 import PlayerStats from "@/components/dashboard/PlayerStats";
-import StatPointsBanner from "@/components/dashboard/StatPointsBanner";
+// import StatPointsBanner from "@/components/dashboard/StatPointsBanner";
 import QuestsSection from "@/components/dashboard/QuestsSection";
 import QuickActions from "@/components/dashboard/QuickActions";
 import SystemMessage from "@/components/dashboard/SystemMessage";
