@@ -2,6 +2,7 @@
   "name": "vite_react_shadcn_ts",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "pnpm@10.16.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -42,6 +43,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "vite_react_shadcn_ts": "link:",
     "zod": "^3.25.76"
   },
   "devDependencies": {
