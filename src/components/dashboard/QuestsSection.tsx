@@ -8,16 +8,23 @@ import {
 } from "lucide-react";
 import { fadeUp } from "./dashboardAnimations";
 import { useQuery } from "@tanstack/react-query";
-import { useUser } from "@clerk/react";
 import { Link } from "react-router-dom";
 import api from "@/lib/axios";
+import { authClient } from "@/lib/auth-client";
 
 const ActiveQuests = () => {
-  const { user } = useUser();
-  const res = useQuery({ queryKey: ["quests", user?.id], queryFn: async () => {
-    const res = await api.get(`/users/me/quests?completed=false`);
-    return res.data;
-  } });
+  const { data: session } = authClient.useSession();
+  const userId = session?.user?.id;
+
+  const res = useQuery({ 
+    queryKey: ["quests", userId], 
+    queryFn: async () => {
+      const res = await api.get(`/users/me/quests?completed=false`);
+      return res.data;
+    },
+    enabled: !!userId
+  });
+
   const quests = res?.data?.data ?? [];
 
   if(res.isPending) return <div>Loading....</div>
@@ -78,12 +85,18 @@ const ActiveQuests = () => {
 };
 
 const DailyTraining = () => {
-    const {user} = useUser();
-    const res = useQuery({queryKey : ['dailyquests',user?.id],queryFn : async()=>{
+    const { data: session } = authClient.useSession();
+    const userId = session?.user?.id;
+
+    const res = useQuery({
+      queryKey: ['dailyquests', userId],
+      queryFn: async() => {
         const res = await api.get(`/users/me/habits`);
         return res.data;
-    }})
-    const dailyquests = res?.data?.data;
+      },
+      enabled: !!userId
+    })
+    const dailyquests = res?.data?.data ?? [];
 
     if(res.isPending) return <div>Loading....</div>
     if(res.isError) return <div>Error....</div>
@@ -117,7 +130,6 @@ const DailyTraining = () => {
         >
           <div className="w-8 h-8 rounded-md bg-secondary/80 flex items-center justify-center shrink-0">
             {/* based on category */}
-            {/* <item.icon className="w-4 h-4 text-accent" />  */}
           </div>
           <div>
             <div className="font-display text-sm font-bold text-foreground tracking-wider">

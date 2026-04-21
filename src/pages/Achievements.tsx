@@ -1,22 +1,22 @@
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { motion } from "framer-motion";
 import { Trophy, Lock, Star, Target, Swords, Zap, Shield, Crown, Flame, Award, TrendingUp, Gem } from "lucide-react";
-import { useAuth } from "@clerk/react";
 import { Navigate } from "react-router-dom";
 import { useQueries } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { useMemo } from "react";
+import { authClient } from "@/lib/auth-client";
 
 interface Badge {
   badgeid: number,
   badgename: string,
-  eligibilty: string,
+  eligibility: string,
   value: number
 }
 
 interface Achievement {
   badgeid: number,
-  clerkuserid: number,
+  userId: string,
   created_at: string | null,
   updated_at: string | null,
   deleted_at: string | null,
@@ -41,7 +41,8 @@ const icons = [
 ];
 
 const Achievements = () => {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { data: session, isPending: isSessionPending } = authClient.useSession();
+  const userId = session?.user?.id;
 
   const [badgeQuery, achievementQuery] = useQueries({
     queries: [
@@ -51,15 +52,15 @@ const Achievements = () => {
           const res = await api.get("/badges");
           return res.data;
         },
-        enabled: !!isSignedIn,
+        enabled: !!userId,
       },
       {
-        queryKey: ["achievements"],
+        queryKey: ["achievements", userId],
         queryFn: async () => {
           const res = await api.get("/users/me/achievements");
           return res.data;
         },
-        enabled: !!isSignedIn,
+        enabled: !!userId,
       },
     ],
   });
@@ -70,20 +71,20 @@ const Achievements = () => {
   const achievementsData = achievementQuery.data?.data;
   const achievements: Achievement[] = useMemo(() => Array.isArray(achievementsData) ? achievementsData : [], [achievementsData]);
 
-  if (!isLoaded) {
-    return null; // or a loading spinner
-  }
+  if (isSessionPending) return <div>Loading...</div>;
+  if (!session) return <Navigate to="/" replace />;
 
-  if (!isSignedIn) {
-    return <Navigate to="/" replace />;
-  }
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
       {badgeQuery.isLoading || achievementQuery.isLoading ? (
-        <div>Loading...</div>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <span className="font-display text-sm tracking-widest text-muted-foreground animate-pulse">SYNCHRONIZING ACHIEVEMENTS...</span>
+        </div>
       ) : badgeQuery.isError || achievementQuery.isError ? (
-        <div>Error...</div>
+        <div className="flex items-center justify-center min-h-[60vh] text-destructive font-display text-sm tracking-widest">
+          SYSTEM ERROR: DATA STREAM INTERRUPTED
+        </div>
       ) : (
         <div className="w-full px-4 md:px-8 xl:px-16 py-8">
           {/* Header */}
@@ -106,20 +107,22 @@ const Achievements = () => {
 
           {/* Achievement Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {badges.map((ach, i) => (
+            {badges.map((ach, i) => {
+              const isUnlocked = achievements.some(item => item.badgeid === ach.badgeid);
+              return (
               <motion.div
                 key={ach.badgeid}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.04 }}
-                className={`relative rounded-lg border p-4 flex items-center gap-4 transition-all duration-300 ${achievements.some(item => item.badgeid === ach.badgeid)  //todo
-                  ? "glass-panel neon-border bg-primary/5"
+                className={`relative rounded-lg border p-4 flex items-center gap-4 transition-all duration-300 ${isUnlocked
+                  ? "glass-panel neon-border bg-primary/5 shadow-[0_0_15px_rgba(var(--primary),0.1)]"
                   : "border-border/30 bg-secondary/20 opacity-60"
                   }`}
               >
                 {/* Icon */}
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${achievements.some(item => item.badgeid === ach.badgeid)  //todo
+                  className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isUnlocked
                     ? "bg-accent/20 text-accent"
                     : "bg-muted/30 text-muted-foreground"
                     }`}
@@ -130,27 +133,27 @@ const Achievements = () => {
                 {/* Info */}
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`font-display text-sm font-bold tracking-wider truncate ${achievements.some(item => item.badgeid === ach.badgeid) ? "text-foreground" : "text-muted-foreground"
+                    <span className={`font-display text-sm font-bold tracking-wider truncate ${isUnlocked ? "text-foreground" : "text-muted-foreground"
                       }`}>
                       {ach.badgename}
                     </span>
-                    {achievements.some(item => item.badgeid === ach.badgeid) ? (  //todo
+                    {isUnlocked ? (
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0" />
                     ) : (
                       <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     )}
                   </div>
                   <p className="font-body text-xs text-muted-foreground truncate">
-                    {ach.eligibilty}
+                    {ach.eligibility}
                   </p>
                 </div>
 
                 {/* Unlocked glow accent */}
-                {achievements.some(item => item.badgeid === ach.badgeid) && (   //todo
+                {isUnlocked && (
                   <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 pointer-events-none" />
                 )}
               </motion.div>
-            ))}
+            )})}
           </div>
 
           {/* Pro Tip */}

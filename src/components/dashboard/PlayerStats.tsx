@@ -6,21 +6,22 @@ import {
   Brain,
   Heart,
   Eye,
-  Target,
-  CalendarCheck,
-  Trophy,
-  BarChart3,
-  Flame,
-  Code,
-  Briefcase,
-  Database,
-  Shield,
 } from "lucide-react";
-import { useUser } from "@clerk/react";
 import api from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
+import { authClient } from "@/lib/auth-client";
 
-const PlayerCard = ({ userinfo }) => {
+interface UserInfo {
+  username?: string;
+  level?: number | string;
+  XP?: number;
+}
+
+interface PlayerCardProps {
+  userinfo: UserInfo;
+}
+
+const PlayerCard = ({ userinfo }: PlayerCardProps) => {
 
   if (!userinfo) return <div>Loading....!!!</div>
 
@@ -50,7 +51,7 @@ const PlayerCard = ({ userinfo }) => {
         <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
           <div
             className="h-full rounded-full bg-accent neon-glow-blue"
-            style={{ width: `${((userinfo?.XP || 0) / 700) * 100}%` }}
+            style={{ width: `${((Number(userinfo?.XP) || 0) / 700) * 100}%` }}
           />
         </div>
       </div>
@@ -58,7 +59,7 @@ const PlayerCard = ({ userinfo }) => {
       <div className="flex gap-8">
         <div>
           <div className="font-display text-2xl font-bold text-accent text-glow-blue">
-            {userinfo.XP}
+            {userinfo.XP || 0}
           </div>
           <div className="font-display text-[10px] tracking-[0.15em] text-muted-foreground uppercase">
             Total XP
@@ -78,15 +79,16 @@ const PlayerCard = ({ userinfo }) => {
 };
 
 const HunterStats = () => {
-  const { user } = useUser();
+  const { data: session } = authClient.useSession();
+  const userId = session?.user?.id;
 
   const res = useQuery({
-    queryKey: ["statPoints", user?.id],
+    queryKey: ["statPoints", userId],
     queryFn: async () => {
       const res = await api.get(`/users/me/stats`);
       return res.data;
     },
-    enabled: !!user?.id,
+    enabled: !!userId,
   });
 
   const statRes = res.data?.data?.[0];
@@ -131,7 +133,11 @@ const HunterStats = () => {
   );
 };
 
-const PlayerStats = ({ userinfo }) => (
+interface PlayerStatsProps {
+  userinfo: UserInfo;
+}
+
+const PlayerStats = ({ userinfo }: PlayerStatsProps) => (
   <motion.div
     custom={1}
     variants={fadeUp}

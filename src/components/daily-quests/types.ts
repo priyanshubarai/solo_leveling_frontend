@@ -1,6 +1,6 @@
 export interface DailyQuest {
   habitid: string;
-  clerkuserid: string;
+  userId: string;
   habittitle: string;
   category: string;
   emoji: string;
@@ -8,15 +8,13 @@ export interface DailyQuest {
 
 export interface DailyQuestCompletion {
   dayid: number;
-  clerkuserid: string;
+  userId: string;
   habitid: string;
   day: number;
   month: number;
   year: number;
   created_at: string;
 }
-
-
 
 export const monthNames = [
   "January", "February", "March", "April", "May", "June",

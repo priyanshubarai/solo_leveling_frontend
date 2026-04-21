@@ -2,7 +2,6 @@ import { useState, useMemo, useCallback } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@clerk/react";
 import { Navigate } from "react-router-dom";
 
 // Modular Components
@@ -14,13 +13,17 @@ import AddGoalDialog from "@/components/goals/AddGoalDialog";
 import { GoalColumn, GoalType } from "@/types/goals";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/axios";
+import { authClient } from "@/lib/auth-client";
 
 const Goals = () => {
-  const { isSignedIn, isLoaded, userId } = useAuth();
+  const { data: session, isPending: isSessionPending } = authClient.useSession();
+  const userId = session?.user?.id;
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<GoalType>("weekly");
+  
   const goals = useQuery({
-    queryKey: ["goals"],
+    queryKey: ["goals", userId],
     queryFn: async () => {
       const res = await api.get(`/users/me/goals`);
       const fetchedGoals = res.data.data || res.data;
@@ -96,13 +99,8 @@ const Goals = () => {
   }, [addGoalMutation]);
 
 
-  if (!isLoaded) {
-    return null;
-  }
-
-  if (!isSignedIn) {
-    return <Navigate to="/" replace />;
-  }
+  if (isSessionPending) return <div>Loading...</div>;
+  if (!session) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen bg-background">

@@ -18,10 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@clerk/react";
 import { Navigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
+import { authClient } from "@/lib/auth-client";
 
 import QuestFilters from "@/components/quests/QuestFilters";
 import QuestList from "@/components/quests/QuestList";
@@ -50,7 +50,9 @@ const QuestsPage = () => {
   const [newCategory, setNewCategory] =
     useState<keyof typeof categoryConfig>("productivity");
   const [newDifficulty, setNewDifficulty] = useState<"Easy" | "Moderate" | "Hard" | "Legendary">("Moderate");
-  const { isSignedIn, isLoaded, userId } = useAuth();
+  
+  const { data: session, isPending } = authClient.useSession();
+  const userId = session?.user?.id;
 
   const questsQuery = useQuery({
     queryKey: ["quests", userId],
@@ -59,7 +61,7 @@ const QuestsPage = () => {
       const response = await api.get(`/users/me/quests`);
       return response.data;
     },
-    enabled: !!userId && isLoaded,
+    enabled: !!userId,
   });
 
   const questsData = questsQuery.data?.data;
@@ -132,10 +134,10 @@ const QuestsPage = () => {
     setCreateOpen(false);
   }, [newTitle, newDescription, userId, newCategory, newDifficulty, createQuestMutation]);
 
-  if (!isLoaded) return null;
-  if (!isSignedIn) return <Navigate to="/" replace />;
-  if (questsQuery.isLoading) return <div>Loading...!!!</div>;
-  if (questsQuery.isError) return <div>Error...!!!</div>;
+  if (isPending) return <div>Loading...</div>;
+  if (!session) return <Navigate to="/" replace />;
+  if (questsQuery.isLoading) return <div>Loading quests...</div>;
+  if (questsQuery.isError) return <div>Error loading quests</div>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -167,7 +169,7 @@ const QuestsPage = () => {
             </Button>
           </div>
         </section>
-
+ 
         <QuestFilters
           activeTab={activeTab}
           setActiveTab={setActiveTab}

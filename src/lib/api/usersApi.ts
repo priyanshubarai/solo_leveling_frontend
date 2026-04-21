@@ -8,7 +8,7 @@ export const SyncUser = () => {
             const res = await api.post("/users");
             await api.post(`/users/me/stats`);
             
-            return res.data.data[0];
+            return res.data.data;
         },
     });
 };

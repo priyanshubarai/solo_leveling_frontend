@@ -14,34 +14,38 @@ import Analytics from "./pages/Analytics";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import AuthWatcher from "./authprovider/authwatcher";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
 
 const queryClient = new QueryClient();
 
 
 
 const App = () => (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthWatcher/>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/quests" element={<Quests />} />
-            <Route path="/daily-quests" element={<DailyQuests />} />
-            <Route path="/goals" element={<Goals />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/achievements" element={<Achievements />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthWatcher/>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/sign-in" element={<SignIn />} />
+          <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/quests" element={<Quests />} />
+          <Route path="/daily-quests" element={<DailyQuests />} />
+          <Route path="/goals" element={<Goals />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/achievements" element={<Achievements />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;

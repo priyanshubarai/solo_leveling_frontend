@@ -1,4 +1,3 @@
-import { useAuth, useUser } from "@clerk/react";
 import { Navigate } from "react-router-dom";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
@@ -10,24 +9,26 @@ import SystemMessage from "@/components/dashboard/SystemMessage";
 import ProTips from "@/components/dashboard/ProTips";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
+import { authClient } from "@/lib/auth-client"
 
 const Dashboard = () => {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { user } = useUser();
+  const { data: session, isPending, error } = authClient.useSession();
   const res = useQuery({
-    queryKey: ["userinfo", user?.id],
+    queryKey: ["userinfo", session?.user?.id],
     queryFn: async () => {
       const res = await api.get(`/users/me`);
       return res.data;
     },
-    enabled: !!user?.id, 
+    enabled: !!session?.user?.id, 
   });
   const userinfo = res.data?.data?.[0];
 
-  if (!isLoaded) return null;
-  if (!isSignedIn) return <Navigate to="/" replace />;
-
-
+  if(error) return <div>Error...!</div>;
+  if (isPending) return <div>Loading...</div>;
+  if (!session){
+    console.log("User is not Signed In");
+    return <Navigate to="/sign-in" replace />;
+  }
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar  />

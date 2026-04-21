@@ -1,7 +1,6 @@
 import { useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Show, SignIn, SignInButton, SignUpButton, UserButton } from "@clerk/react";
 
 // Load all frames via Vite glob — sorted so they play in order
 const frameModules = import.meta.glob<{ default: string }>(
@@ -194,14 +193,10 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
           >
-            <SignInButton forceRedirectUrl="/dashboard">
-              <button className="btn-primary-glow text-base">
-                Login
-              </button>
-            </SignInButton>
-            <SignUpButton forceRedirectUrl="/dashboard">
-              <button className="btn-outline-glow text-base">Sign up</button>
-            </SignUpButton>
+            <a href="/dashboard" className="btn-primary-glow text-base">
+              Login
+            </a>
+            <a href="/sign-up" className="btn-outline-glow text-base">Sign up</a>
           </motion.div>
         </div>
 

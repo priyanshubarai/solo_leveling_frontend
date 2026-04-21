@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@clerk/react";
 
 import DashboardNavbar from "@/components/DashboardNavbar";
 import DailyQuestsHeader from "@/components/daily-quests/DailyQuestsHeader";
@@ -13,9 +12,11 @@ import CreateQuestDialog from "@/components/daily-quests/CreateQuestDialog";
 import { DailyQuest, monthNames, DailyQuestCompletion } from "@/components/daily-quests/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
+import { authClient } from "@/lib/auth-client";
 
 const DailyQuests = () => {
-  const { isSignedIn, isLoaded, userId } = useAuth();
+  const { data: session, isPending: isSessionPending } = authClient.useSession();
+  const userId = session?.user?.id;
 
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth()); // 0-indexed: Jan=0, Mar=2…
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -146,8 +147,8 @@ const DailyQuests = () => {
   }, 0);
   const completionPct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
 
-  if (!isLoaded) return null;
-  if (!isSignedIn) return <Navigate to="/" replace />;
+  if (isSessionPending) return <div>Loading...</div>;
+  if (!session) return <Navigate to="/" replace />;
 
   const today = new Date();
   const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;

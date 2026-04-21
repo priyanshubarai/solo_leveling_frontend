@@ -15,8 +15,8 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts";
-import { useAuth } from "@clerk/react";
 import { Navigate } from "react-router-dom";
+import { authClient } from "@/lib/auth-client";
 
 const statCards = [
   { label: "Total Quests", value: "22", icon: Target, accent: "primary" },
@@ -59,19 +59,10 @@ const iconColorMap: Record<string, string> = {
 };
 
 const Analytics = () => {
-  const { isSignedIn, isLoaded } = useAuth();
-
-  // Wait for Clerk to finish loading before checking auth status.
-  // Without this, isSignedIn is `undefined` on first render and triggers
-  // an immediate redirect back to "/" even for authenticated users.
+  const { data: session, isPending } = authClient.useSession();
   
-  if (!isLoaded) {
-    return null; // or a loading spinner
-  }
-
-  if (!isSignedIn) {
-    return <Navigate to="/" replace />;
-  }
+  if (isPending) return <div>Loading...</div>;
+  if (!session) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen bg-background">

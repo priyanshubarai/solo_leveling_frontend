@@ -39,8 +39,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@clerk/react";
 import { Navigate } from "react-router-dom";
+import { authClient } from "@/lib/auth-client";
 
 type SettingsTab = "profile" | "notifications" | "appearance" | "privacy" | "account";
 
@@ -55,11 +55,13 @@ const tabs: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const { toast } = useToast();
+  const { data: session, isPending } = authClient.useSession();
 
   // Profile state
-  const [displayName, setDisplayName] = useState("Being Specter");
+  // Note: In a real app, these would be initialized from session data
+  const [displayName, setDisplayName] = useState(session?.user?.name || "");
   const [username, setUsername] = useState("beingspecter");
-  const [email, setEmail] = useState("specter@hunterlevel.com");
+  const [email, setEmail] = useState(session?.user?.email || "");
   const [bio, setBio] = useState("Shadow Monarch in training. Grinding quests daily.");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -114,19 +116,8 @@ const SettingsPage = () => {
     </div>
   );
 
-  const { isSignedIn, isLoaded } = useAuth();
-
-  // Wait for Clerk to finish loading before checking auth status.
-  // Without this, isSignedIn is `undefined` on first render and triggers
-  // an immediate redirect back to "/" even for authenticated users.
-  
-  if (!isLoaded) {
-    return null; // or a loading spinner
-  }
-
-  if (!isSignedIn) {
-    return <Navigate to="/" replace />;
-  }
+  if (isPending) return <div>Loading...</div>;
+  if (!session) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen bg-background">
@@ -172,16 +163,20 @@ const SettingsPage = () => {
                 <SectionCard title="Avatar & Display" description="Customize how others see you" index={2}>
                   <div className="flex items-center gap-5">
                     <div className="relative group">
-                      <div className="w-20 h-20 rounded-full bg-accent/20 neon-border-blue flex items-center justify-center">
-                        <span className="text-accent font-display text-2xl font-bold">E</span>
+                      <div className="w-20 h-20 rounded-full bg-accent/20 neon-border-blue flex items-center justify-center overflow-hidden">
+                        {session.user.image ? (
+                          <img src={session.user.image} alt={session.user.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-accent font-display text-2xl font-bold">{(session.user.name || "U").charAt(0).toUpperCase()}</span>
+                        )}
                       </div>
                       <button className="absolute inset-0 rounded-full bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <Camera className="w-5 h-5 text-foreground" />
                       </button>
                     </div>
                     <div className="space-y-1">
-                      <p className="font-display text-sm tracking-wider text-foreground">Being Specter</p>
-                      <p className="text-xs text-muted-foreground">Level 7 · Shadow Monarch</p>
+                      <p className="font-display text-sm tracking-wider text-foreground">{session.user.name}</p>
+                      <p className="text-xs text-muted-foreground tracking-wider uppercase">Rank: Hunter</p>
                       <button className="text-xs text-primary hover:underline font-display tracking-wider">Change Avatar</button>
                     </div>
                   </div>
@@ -202,7 +197,7 @@ const SettingsPage = () => {
                     <Label className="font-display text-xs tracking-wider text-muted-foreground">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 bg-secondary/30 border-border/40 focus:border-primary/60" />
+                      <Input value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 bg-secondary/30 border-border/40 focus:border-primary/60" disabled />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -378,7 +373,7 @@ const SettingsPage = () => {
               <div>
                 <p className="font-display text-xs tracking-wider text-accent uppercase">System Notice</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Your settings are stored locally. Connect your account to sync across devices.
+                  Your settings are being updated to sync with the new System architecture.
                 </p>
               </div>
             </motion.div>
